@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from scipy.sparse.csr import csr_matrix
-from typing import List, Tuple, Union, Mapping, Any
+from typing import List, Tuple, Union, Mapping, Any, Optional
+from typing import Callable
 
 # Models
 import hdbscan
@@ -78,6 +79,7 @@ class BERTopic:
                  hdbscan_model: hdbscan.HDBSCAN = None,
                  vectorizer_model: CountVectorizer = None,
                  verbose: bool = False,
+                 clean_func:  Optional[Callable] = None
                  ):
         """BERTopic initialization
 
@@ -166,6 +168,11 @@ class BERTopic:
         self.topic_embeddings = None
         self.topic_sim_matrix = None
         self.representative_docs = None
+        self._preprocess_personalized = None
+
+        # adding custom method for do some preprocessing to the query and paragraphs
+        if clean_func:
+            self._preprocess_personalized = clean_func
 
         if verbose:
             logger.set_level("DEBUG")
@@ -305,6 +312,7 @@ class BERTopic:
         probabilities = self._map_probabilities(probabilities)
         predictions = documents.Topic.to_list()
 
+        self.documents = documents
         return predictions, probabilities
 
     def transform(self,
@@ -1562,7 +1570,11 @@ class BERTopic:
             tf_idf: The resulting matrix giving a value (importance score) for each word per topic
             words: The names of the words to which values were given
         """
-        documents = self._preprocess_text(documents_per_topic.Document.values)
+
+        if self._preprocess_personalized:
+            documents = self._preprocess_personalized(documents_per_topic.Document.values)
+        else:
+            documents = self._preprocess_text(documents_per_topic.Document.values)
 
         if fit:
             self.vectorizer_model.fit(documents)
