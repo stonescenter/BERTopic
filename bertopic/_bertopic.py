@@ -79,6 +79,7 @@ class BERTopic:
                  hdbscan_model: hdbscan.HDBSCAN = None,
                  vectorizer_model: CountVectorizer = None,
                  verbose: bool = False,
+                 most_representative: int = 3,
                  clean_func:  Optional[Callable] = None
                  ):
         """BERTopic initialization
@@ -139,6 +140,7 @@ class BERTopic:
         self.calculate_probabilities = calculate_probabilities
         self.verbose = verbose
         self.seed_topic_list = seed_topic_list
+        self.most_representative = most_representative
 
         # Embedding model
         self.language = language if not embedding_model else None
@@ -1488,7 +1490,7 @@ class BERTopic:
                     points = raw_tree['child'][(raw_tree['parent'] == leaf) & (raw_tree['lambda_val'] == max_lambda)]
                     result = np.hstack((result, points))
 
-                representative_docs[topic] = list(np.random.choice(result, 3, replace=False).astype(int))
+                representative_docs[topic] = list(np.random.choice(result, self.most_representative, replace=False).astype(int))
 
         # Convert indices to documents
         self.representative_docs = {topic: [documents.iloc[doc_id].Document for doc_id in doc_ids]
