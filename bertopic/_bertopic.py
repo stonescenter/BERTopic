@@ -224,6 +224,7 @@ class BERTopic:
     def fit_transform(self,
                       documents: List[str],
                       embeddings: np.ndarray = None,
+                      ids: List[str] = None,
                       y: Union[List[int], np.ndarray] = None) -> Tuple[List[int],
                                                                        Union[np.ndarray, None]]:
         """ Fit the models on a collection of documents, generate topics, and return the docs with topics
@@ -274,9 +275,15 @@ class BERTopic:
         check_documents_type(documents)
         check_embeddings_shape(embeddings, documents)
 
-        documents = pd.DataFrame({"Document": documents,
-                                  "ID": range(len(documents)),
-                                  "Topic": None})
+
+        if ids==None:
+            documents = pd.DataFrame({"Document": documents,
+                                      "ID": range(len(documents)),
+                                      "Topic": None})
+        else:
+            documents = pd.DataFrame({"Document": documents,
+                                      "ID": ids,
+                                      "Topic": None})
 
         # Extract embeddings
         if embeddings is None:
